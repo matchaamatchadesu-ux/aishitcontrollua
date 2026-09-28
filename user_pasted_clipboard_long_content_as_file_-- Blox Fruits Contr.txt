@@ -1,0 +1,122 @@
+-- Blox Fruits Control Fruit Asset ID Replacer (Mobile Compatible)
+
+local Player = game.Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+-- Asset IDs to replace
+local NEW_ASSET_ID = "rbxassetid://130002991386896"
+local OLD_ASSET_ID = "rbxassetid://135584181153647"
+
+-- GUI Setup
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "AssetReplacerGUI"
+ScreenGui.Parent = PlayerGui
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 250, 0, 100)
+MainFrame.Position = UDim2.new(0.5, -125, 0.5, -50)
+MainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+MainFrame.BorderSizePixel = 0
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+local TitleBar = Instance.new("Frame")
+TitleBar.Size = UDim2.new(1, 0, 0, 25)
+TitleBar.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+TitleBar.BorderSizePixel = 0
+TitleBar.Parent = MainFrame
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Size = UDim2.new(1, 0, 1, 0)
+TitleLabel.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.Font = Enum.Font.SourceSansBold
+TitleLabel.TextSize = 18
+TitleLabel.Text = "Control Asset Replacer"
+TitleLabel.Parent = TitleBar
+
+local CloseButton = Instance.new("TextButton")
+CloseButton.Size = UDim2.new(0, 25, 1, 0)
+CloseButton.Position = UDim2.new(1, -25, 0, 0)
+CloseButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.Font = Enum.Font.SourceSansBold
+CloseButton.TextSize = 18
+CloseButton.Text = "X"
+CloseButton.Parent = TitleBar
+
+CloseButton.MouseButton1Click:Connect(function()
+    ScreenGui.Enabled = false
+end)
+
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Size = UDim2.new(0.8, 0, 0, 40)
+ToggleButton.Position = UDim2.new(0.1, 0, 0.4, 0)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.Font = Enum.Font.SourceSansBold
+ToggleButton.TextSize = 16
+ToggleButton.Text = "Replacer: ON"
+ToggleButton.Parent = MainFrame
+
+local isReplacerEnabled = true
+local connection = nil
+
+local function replaceAsset(instance)
+    if not isReplacerEnabled then return end
+
+    -- Check for MeshPart or SpecialMesh
+    if instance:IsA("MeshPart") or instance:IsA("SpecialMesh") then
+        if instance.MeshId == NEW_ASSET_ID then
+            instance.MeshId = OLD_ASSET_ID
+            print("[Asset Replacer] Replaced MeshId: " .. NEW_ASSET_ID .. " -> " .. OLD_ASSET_ID)
+        end
+    end
+    -- Add other asset types if needed (e.g., ParticleEmitter.TextureId, Decal.Texture)
+    -- For example, if the visual is a texture on a ParticleEmitter:
+    -- elseif instance:IsA("ParticleEmitter") then
+    --     if instance.Texture == NEW_ASSET_ID then
+    --         instance.Texture = OLD_ASSET_ID
+    --         print("[Asset Replacer] Replaced TextureId: " .. NEW_ASSET_ID .. " -> " .. OLD_ASSET_ID)
+    --     end
+    -- end
+end
+
+local function enableReplacer()
+    if isReplacerEnabled then return end
+    isReplacerEnabled = true
+    ToggleButton.Text = "Replacer: ON"
+    ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+    print("[Asset Replacer] Enabled.")
+    connection = game.DescendantAdded:Connect(replaceAsset)
+end
+
+local function disableReplacer()
+    if not isReplacerEnabled then return end
+    isReplacerEnabled = false
+    ToggleButton.Text = "Replacer: OFF"
+    ToggleButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+    print("[Asset Replacer] Disabled.")
+    if connection then
+        connection:Disconnect()
+        connection = nil
+    end
+end
+
+ToggleButton.MouseButton1Click:Connect(function()
+    if isReplacerEnabled then
+        disableReplacer()
+    else
+        enableReplacer()
+    end
+end)
+
+-- Initial state
+ScreenGui.Enabled = true
+enableReplacer() -- Start replacer automatically on script execution
+
+-- Also check existing descendants in case the asset is already loaded
+for i, v in pairs(game:GetDescendants()) do
+    replaceAsset(v)
+end
